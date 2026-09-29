@@ -1,976 +1,758 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Hyun's Dashboard</title>
   <style>
-    /* ============================================================
-       ROOT & RESET
-    ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:          #0d0d0d;
-      --surface:     #1a1a1a;
-      --surface2:    #222222;
-      --border:      #333333;
-      --text:        #e0e0e0;
-      --text-muted:  #888888;
-      --green:       #39ff14;
-      --green-dim:   #1a7a00;
-      --red:         #c0392b;
-      --red-dark:    #922b21;
-      --postit-bg:   #f5f0c0;
-      --postit-bg2:  #ede8a0;
-      --postit-text: #1a1a00;
-      --radius: 14px;
-      --shadow: 0 8px 32px rgba(0,0,0,.7);
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d0d0d; --surface:#1a1a1a; --surface2:#222;
+      --border:#333; --text:#e0e0e0; --muted:#888;
+      --green:#39ff14; --green-dim:#1a7a00;
+      --red:#c0392b; --red-dark:#922b21;
+      --postit:#f5f0c0; --postit2:#ede8a0; --postit-text:#1a1a00;
+      --radius:14px; --shadow:0 8px 32px rgba(0,0,0,.7);
     }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);
+      font-family:'Segoe UI','Apple SD Gothic Neo',Malgun Gothic,sans-serif;font-size:15px;}
 
-    html, body {
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', 'Apple SD Gothic Neo', Malgun Gothic, sans-serif;
-      font-size: 15px;
-    }
+    /* ── HEADER ── */
+    header{text-align:center;padding:20px 0 14px;
+      background:linear-gradient(180deg,#111 0%,transparent 100%);border-bottom:1px solid #1e1e1e;}
+    header h1{font-size:1.7rem;color:var(--green);letter-spacing:3px;
+      text-shadow:0 0 14px var(--green),0 0 28px rgba(57,255,20,.3);}
 
-    /* ============================================================
-       HEADER
-    ============================================================ */
-    header {
-      text-align: center;
-      padding: 22px 0 14px;
-      background: linear-gradient(180deg, #111 0%, transparent 100%);
-      border-bottom: 1px solid #1e1e1e;
-    }
-    header h1 {
-      font-size: 1.7rem;
-      color: var(--green);
-      letter-spacing: 3px;
-      text-shadow: 0 0 14px var(--green), 0 0 28px rgba(57,255,20,.3);
-    }
+    /* ── DASHBOARD GRID ── */
+    .dashboard{display:grid;grid-template-columns:340px 1fr 1fr;gap:18px;
+      max-width:1320px;margin:0 auto;padding:18px 18px 50px 8px;align-items:start;}
+    @media(max-width:1060px){.dashboard{grid-template-columns:1fr 1fr;}.col-left{grid-column:1/-1;}}
+    @media(max-width:640px){.dashboard{grid-template-columns:1fr;}}
 
-    /* ============================================================
-       DASHBOARD GRID
-    ============================================================ */
-    .dashboard {
-      display: grid;
-      grid-template-columns: 380px 1fr 1fr;
-      gap: 22px;
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 22px 20px 50px;
-      align-items: start;
-    }
+    /* Column wrappers */
+    .col-left{display:flex;flex-direction:column;gap:14px;}
+    .col-center{display:flex;flex-direction:column;gap:14px;}
 
-    @media (max-width: 1060px) {
-      .dashboard { grid-template-columns: 1fr 1fr; }
-      .clock-card { grid-column: 1 / -1; }
-    }
-    @media (max-width: 640px) {
-      .dashboard { grid-template-columns: 1fr; }
-    }
+    /* ── CARD ── */
+    .card{background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);box-shadow:var(--shadow);}
+    .card-title{font-size:.82rem;font-weight:600;color:var(--muted);
+      text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
 
-    /* ============================================================
-       CARDS
-    ============================================================ */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
+    /* ── CLOCK ── */
+    .clock-card{padding:16px 16px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:0;}
+    .clock-inner{display:flex;flex-direction:column;align-items:center;width:100%;gap:8px;}
+    #clockCanvas{border-radius:50%;display:block;max-width:100%;}
+    .digital-time{font-size:2rem;font-weight:700;color:var(--green);
+      text-shadow:0 0 14px var(--green);letter-spacing:3px;font-family:'Courier New',monospace;text-align:center;}
+    .clock-date{font-size:.83rem;color:var(--muted);text-align:center;}
 
-    .card-title {
-      font-size: .9rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 16px;
-    }
+    /* ── TOOLS CARD (Timer / Stopwatch / Alarm) ── */
+    .tools-card{padding:0;overflow:hidden;}
+    .tabs{display:flex;border-bottom:1px solid var(--border);}
+    .tab-btn{flex:1;padding:10px 0;background:var(--surface2);border:none;
+      color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;
+      transition:all .2s;border-right:1px solid var(--border);}
+    .tab-btn:last-child{border-right:none;}
+    .tab-btn.active{background:var(--surface);color:var(--green);
+      border-bottom:2px solid var(--green);margin-bottom:-1px;}
+    .tab-btn:hover:not(.active){background:var(--surface);color:var(--text);}
+    .tab-content{display:none;padding:14px;}
+    .tab-content.active{display:block;}
 
-    /* ============================================================
-       CLOCK
-    ============================================================ */
-    .clock-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
+    /* tool shared */
+    .tool-display{font-size:2.6rem;font-weight:700;color:var(--green);
+      font-family:'Courier New',monospace;letter-spacing:3px;text-align:center;
+      text-shadow:0 0 10px var(--green);margin-bottom:12px;line-height:1.1;}
+    .tool-input-row{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px;flex-wrap:wrap;}
+    .tool-input{background:var(--surface2);border:1px solid var(--border);
+      color:var(--text);border-radius:6px;padding:6px 10px;font-size:.92rem;
+      width:68px;text-align:center;}
+    .tool-input:focus{outline:1px solid var(--green);}
+    .lbl{color:var(--muted);font-size:.85rem;}
+    .tool-btn-row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;}
+    .tool-btn{border:none;border-radius:6px;padding:7px 14px;font-size:.83rem;
+      font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .tb-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
+    .tb-green:hover{background:var(--green);color:#000;}
+    .tb-red{background:#4a1010;color:#ff6b6b;border:1px solid #c0392b;}
+    .tb-red:hover{background:#c0392b;color:#fff;}
+    .tb-gray{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+    .tb-gray:hover{background:#333;color:var(--text);}
 
-    #clockCanvas {
-      border-radius: 50%;
-      display: block;
-      max-width: 100%;
-    }
+    /* stopwatch laps */
+    .sw-laps{margin-top:10px;max-height:90px;overflow-y:auto;font-size:.76rem;color:var(--muted);}
+    .sw-lap-item{padding:3px 0;border-bottom:1px solid var(--border);}
 
-    .digital-time {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--green);
-      text-shadow: 0 0 16px var(--green), 0 0 32px rgba(57,255,20,.3);
-      letter-spacing: 4px;
-      font-variant-numeric: tabular-nums;
-      font-family: 'Courier New', monospace;
-    }
+    /* alarm */
+    .alarm-time-input{background:var(--surface2);border:1px solid var(--border);
+      color:var(--text);border-radius:6px;padding:8px 12px;font-size:1.1rem;
+      text-align:center;width:140px;margin-bottom:10px;}
+    .alarm-time-input:focus{outline:1px solid var(--green);}
+    .alarm-status{text-align:center;font-size:.83rem;color:var(--muted);margin-top:8px;min-height:18px;}
+    .alarm-status.on{color:var(--green);}
+    .alarm-status.off{color:#ff6b6b;}
 
-    .clock-date {
-      font-size: .9rem;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-    }
+    /* ── ALARM OVERLAY ── */
+    @keyframes flashBg{0%,100%{background:rgba(255,50,0,.15);}50%{background:rgba(255,200,0,.4);}}
+    @keyframes flashIcon{0%,100%{transform:scale(1) rotate(-6deg);}50%{transform:scale(1.2) rotate(6deg);}}
+    @keyframes flashBorder{0%,100%{box-shadow:0 0 0 6px rgba(255,50,0,1);}50%{box-shadow:0 0 0 20px rgba(255,200,0,.5);}}
+    .alarm-overlay{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:20px;cursor:pointer;
+      animation:flashBg .45s ease-in-out infinite;}
+    .alarm-overlay.hidden{display:none!important;}
+    .alarm-icon-big{font-size:9rem;animation:flashIcon .45s ease-in-out infinite;
+      filter:drop-shadow(0 0 30px #ff0);}
+    .alarm-msg{font-size:2.4rem;font-weight:900;color:#fff;letter-spacing:4px;
+      text-shadow:0 0 20px #ff0,0 0 40px #f00;animation:flashBorder .45s ease-in-out infinite;
+      padding:12px 30px;border-radius:12px;}
+    .alarm-hint{font-size:1rem;color:rgba(255,255,255,.8);margin-top:6px;}
 
-    /* ============================================================
-       CALENDAR
-    ============================================================ */
-    .calendar-card { padding: 0; overflow: hidden; }
+    /* ── CALENDAR ── */
+    .calendar-card{padding:0;overflow:hidden;}
+    .cal-header{display:flex;align-items:center;justify-content:space-between;
+      background:var(--red);padding:11px 13px;}
+    .cal-header:first-child{border-radius:var(--radius) var(--radius) 0 0;}
+    .calendar-card:first-child .cal-header{border-radius:var(--radius) var(--radius) 0 0;}
+    .cal-hc{text-align:center;line-height:1.25;}
+    .cal-month{display:block;font-size:1.15rem;font-weight:900;color:#fff;
+      text-transform:uppercase;letter-spacing:2px;}
+    .cal-year{display:block;font-size:.9rem;font-weight:700;color:#ffd6d6;}
+    .cal-nav{background:var(--red-dark);border:none;color:#fff;font-size:.95rem;
+      width:30px;height:30px;border-radius:6px;cursor:pointer;transition:background .2s;}
+    .cal-nav:hover{background:#6e1f18;}
+    .cal-nav.invisible{visibility:hidden;}
+    .cal-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+    .cal-table thead tr{background:var(--red-dark);}
+    .cal-table th{padding:6px 0;font-size:.76rem;font-weight:700;color:#ffd6d6;
+      text-align:center;border:1px solid rgba(255,255,255,.1);}
+    .cal-table th:first-child{color:#ff9090;}
+    .cal-table th:last-child{color:#90c8ff;}
+    .cal-table td{padding:4px 2px;text-align:center;font-size:.84rem;color:var(--text);
+      border:1px solid var(--border);background:var(--surface);height:30px;vertical-align:middle;}
+    .cal-table td:hover:not(.empty){background:var(--surface2);}
+    .cal-table td.empty{background:#0f0f0f;}
+    .cal-table td.sunday{color:#ff6b6b;}
+    .cal-table td.saturday{color:#6bb8ff;}
+    .cal-table td.today{background:var(--red)!important;color:#fff!important;
+      font-weight:900;border-radius:50%;box-shadow:0 0 10px rgba(192,57,43,.9);}
 
-    .cal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--red);
-      padding: 16px 18px;
-      border-radius: var(--radius) var(--radius) 0 0;
-    }
+    /* ── NOTE CARD ── */
+    .note-card{padding:16px;display:flex;flex-direction:column;gap:12px;
+      background:var(--postit)!important;border-color:#d4a017!important;}
+    .note-card .card-title{color:#6a5000;}
+    .note-header{display:flex;align-items:center;justify-content:space-between;}
+    .btn-add{background:#d4a017;border:1px solid #b88a00;color:#000;
+      padding:7px 14px;border-radius:8px;cursor:pointer;font-size:.87rem;
+      font-weight:700;transition:all .2s;white-space:nowrap;}
+    .btn-add:hover{background:#f0b820;box-shadow:0 0 10px rgba(212,160,23,.5);}
+    .note-list{display:flex;flex-direction:column;gap:10px;max-height:500px;
+      overflow-y:auto;padding-right:4px;}
+    .note-empty{color:#8a6800;font-size:.85rem;text-align:center;padding:28px 10px;
+      border:1px dashed #d4a017;border-radius:8px;background:rgba(255,255,255,.35);}
+    .note-item{background:var(--postit2);color:var(--postit-text);
+      border-radius:3px 10px 10px 3px;padding:11px 13px 34px;position:relative;
+      box-shadow:3px 4px 12px rgba(0,0,0,.25);cursor:pointer;
+      border-left:6px solid #d4a017;transition:transform .15s,box-shadow .15s;min-height:78px;}
+    .note-item:hover{transform:rotate(-.4deg) scale(1.01);}
+    .note-preview{font-size:.86rem;line-height:1.55;overflow:hidden;max-height:68px;}
+    .note-date{font-size:.71rem;color:#999;margin-top:5px;}
+    .note-actions{position:absolute;bottom:7px;right:9px;display:flex;gap:5px;
+      opacity:0;transition:opacity .2s;}
+    .note-item:hover .note-actions{opacity:1;}
+    .note-btn{border:none;border-radius:4px;padding:3px 9px;font-size:.73rem;cursor:pointer;font-weight:600;}
+    .note-btn.edit{background:#d4a017;color:#000;}
+    .note-btn.del{background:#c0392b;color:#fff;}
 
-    .cal-header-center { text-align: center; line-height: 1.2; }
+    /* ── MODAL ── */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;
+      align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(5px);}
+    .modal-hidden{display:none!important;}
+    .modal-box{background:var(--postit);color:var(--postit-text);
+      border-radius:3px 16px 16px 3px;
+      width:min(1100px,96vw);
+      max-height:95vh;display:flex;flex-direction:column;
+      box-shadow:8px 10px 50px rgba(0,0,0,.9);border-left:9px solid #d4a017;overflow:hidden;}
+    .modal-top{display:flex;align-items:center;justify-content:space-between;
+      background:var(--postit2);padding:12px 18px;border-bottom:1px solid #d4a017;flex-shrink:0;}
+    .modal-title{font-weight:700;font-size:1.05rem;}
+    .btn-icon{background:none;border:none;font-size:1.3rem;cursor:pointer;
+      color:var(--postit-text);width:30px;height:30px;display:flex;align-items:center;
+      justify-content:center;border-radius:50%;transition:background .15s;}
+    .btn-icon:hover{background:rgba(0,0,0,.1);}
+    .rte-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;
+      background:#ede4a0;border-bottom:1px solid #c8b800;flex-shrink:0;}
+    .rte-toolbar button,.rte-toolbar select{background:#fffde7;border:1px solid #c8b800;
+      border-radius:4px;padding:4px 9px;font-size:.82rem;cursor:pointer;color:#333;
+      transition:background .15s;min-height:28px;}
+    .rte-toolbar button:hover,.rte-toolbar select:hover{background:#fff9c4;}
+    .rte-toolbar input[type="color"]{width:34px;height:28px;border:1px solid #c8b800;
+      border-radius:4px;cursor:pointer;padding:2px;background:#fffde7;}
+    .rte-editor{flex:1;min-height:440px;max-height:58vh;overflow-y:auto;
+      padding:20px;outline:none;font-size:.95rem;line-height:1.75;
+      color:var(--postit-text);background:var(--postit);caret-color:#333;}
+    .rte-editor:empty::before{content:'여기에 메모를 입력하세요…';color:#bbb;pointer-events:none;}
+    .modal-actions{display:flex;align-items:center;justify-content:space-between;
+      padding:11px 18px;background:var(--postit2);border-top:1px solid #d4a017;
+      flex-shrink:0;flex-wrap:wrap;gap:8px;}
+    .export-group{display:flex;align-items:center;gap:7px;font-size:.85rem;color:#555;}
+    .btn-export{background:#555;color:#fff;border:none;border-radius:6px;
+      padding:6px 16px;cursor:pointer;font-size:.83rem;font-weight:600;}
+    .btn-export:hover{background:#333;}
+    .btn-save{background:#d4a017;color:#000;border:none;border-radius:8px;
+      padding:9px 26px;font-size:.92rem;font-weight:700;cursor:pointer;}
+    .btn-save:hover{background:#f0b820;box-shadow:0 0 14px rgba(212,160,23,.6);}
 
-    .cal-month {
-      display: block;
-      font-size: 1.4rem;
-      font-weight: 900;
-      color: #fff;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-    }
-
-    .cal-year {
-      display: block;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #ffd6d6;
-    }
-
-    .cal-nav {
-      background: var(--red-dark);
-      border: none;
-      color: #fff;
-      font-size: 1.1rem;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background .2s;
-      flex-shrink: 0;
-    }
-    .cal-nav:hover { background: #6e1f18; }
-
-    .cal-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    .cal-table thead tr {
-      background: var(--red-dark);
-    }
-
-    .cal-table th {
-      padding: 9px 0;
-      font-size: .82rem;
-      font-weight: 700;
-      color: #ffd6d6;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,.1);
-    }
-
-    .cal-table th:first-child { color: #ff9090; }
-    .cal-table th:last-child  { color: #90c8ff; }
-
-    .cal-table td {
-      padding: 8px 4px;
-      text-align: center;
-      font-size: .92rem;
-      color: var(--text);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      cursor: default;
-      transition: background .15s;
-      vertical-align: middle;
-      height: 40px;
-    }
-
-    .cal-table td:hover:not(.empty) { background: var(--surface2); }
-    .cal-table td.empty { background: #0f0f0f; }
-    .cal-table td.sunday  { color: #ff6b6b; }
-    .cal-table td.saturday { color: #6bb8ff; }
-
-    .cal-table td.today {
-      background: var(--red) !important;
-      color: #fff !important;
-      font-weight: 900;
-      border-radius: 50%;
-      box-shadow: 0 0 12px rgba(192,57,43,.9), inset 0 0 8px rgba(255,255,255,.1);
-    }
-
-    /* ============================================================
-       POST-IT SECTION
-    ============================================================ */
-    .note-card { display: flex; flex-direction: column; gap: 14px; min-height: 420px; }
-
-    .note-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .btn-add {
-      background: var(--green-dim);
-      border: 1px solid var(--green);
-      color: var(--green);
-      padding: 7px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: .88rem;
-      font-weight: 700;
-      transition: all .2s;
-      white-space: nowrap;
-    }
-    .btn-add:hover {
-      background: var(--green);
-      color: #000;
-      box-shadow: 0 0 14px var(--green);
-    }
-
-    .note-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-height: 500px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .note-empty {
-      color: var(--text-muted);
-      font-size: .85rem;
-      text-align: center;
-      padding: 30px 10px;
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-    }
-
-    .note-item {
-      background: var(--postit-bg);
-      color: var(--postit-text);
-      border-radius: 3px 12px 12px 3px;
-      padding: 12px 14px 36px;
-      position: relative;
-      box-shadow: 3px 5px 14px rgba(0,0,0,.6), inset 0 -4px 8px rgba(0,0,0,.1);
-      cursor: pointer;
-      border-left: 7px solid #d4a017;
-      transition: transform .15s, box-shadow .15s;
-      min-height: 80px;
-    }
-
-    .note-item::after {
-      content: '';
-      position: absolute;
-      top: 0; right: 0;
-      width: 0; height: 0;
-      border-style: solid;
-      border-width: 0 24px 24px 0;
-      border-color: transparent #c8b400 transparent transparent;
-      opacity: .4;
-    }
-
-    .note-item:hover { transform: rotate(-0.5deg) scale(1.015); box-shadow: 5px 8px 20px rgba(0,0,0,.7); }
-
-    .note-preview {
-      font-size: .88rem;
-      line-height: 1.55;
-      overflow: hidden;
-      max-height: 72px;
-    }
-
-    .note-date {
-      font-size: .72rem;
-      color: #999;
-      margin-top: 6px;
-    }
-
-    .note-actions {
-      position: absolute;
-      bottom: 8px;
-      right: 10px;
-      display: flex;
-      gap: 6px;
-      opacity: 0;
-      transition: opacity .2s;
-    }
-    .note-item:hover .note-actions { opacity: 1; }
-
-    .note-btn {
-      border: none;
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-size: .75rem;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .note-btn.edit { background: #d4a017; color: #000; }
-    .note-btn.del  { background: #c0392b; color: #fff; }
-    .note-btn:hover { opacity: .85; }
-
-    /* ============================================================
-       MODAL
-    ============================================================ */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      backdrop-filter: blur(5px);
-    }
-    .modal-hidden { display: none !important; }
-
-    .modal-box {
-      background: var(--postit-bg);
-      color: var(--postit-text);
-      border-radius: 3px 16px 16px 3px;
-      width: min(740px, 96vw);
-      max-height: 92vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 8px 10px 50px rgba(0,0,0,.9);
-      border-left: 9px solid #d4a017;
-      overflow: hidden;
-    }
-
-    .modal-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--postit-bg2);
-      padding: 13px 18px;
-      border-bottom: 1px solid #d4a017;
-      flex-shrink: 0;
-    }
-    .modal-title { font-weight: 700; font-size: 1.05rem; }
-
-    .btn-icon {
-      background: none;
-      border: none;
-      font-size: 1.3rem;
-      cursor: pointer;
-      color: var(--postit-text);
-      line-height: 1;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: background .15s;
-    }
-    .btn-icon:hover { background: rgba(0,0,0,.1); }
-
-    /* RTE Toolbar */
-    .rte-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding: 8px 12px;
-      background: #ede4a0;
-      border-bottom: 1px solid #c8b800;
-      flex-shrink: 0;
-    }
-
-    .rte-toolbar button,
-    .rte-toolbar select {
-      background: #fffde7;
-      border: 1px solid #c8b800;
-      border-radius: 4px;
-      padding: 4px 9px;
-      font-size: .82rem;
-      cursor: pointer;
-      color: #333;
-      transition: background .15s;
-      min-height: 28px;
-    }
-    .rte-toolbar button:hover,
-    .rte-toolbar select:hover { background: #fff9c4; }
-
-    .rte-toolbar input[type="color"] {
-      width: 34px;
-      height: 28px;
-      border: 1px solid #c8b800;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 2px;
-      background: #fffde7;
-    }
-
-    /* RTE Editor */
-    .rte-editor {
-      flex: 1;
-      min-height: 220px;
-      max-height: 38vh;
-      overflow-y: auto;
-      padding: 18px;
-      outline: none;
-      font-size: .95rem;
-      line-height: 1.75;
-      color: var(--postit-text);
-      background: var(--postit-bg);
-      caret-color: #333;
-    }
-
-    .rte-editor:empty::before {
-      content: '여기에 메모를 입력하세요…';
-      color: #aaa;
-      pointer-events: none;
-    }
-
-    /* Modal footer */
-    .modal-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 16px;
-      background: var(--postit-bg2);
-      border-top: 1px solid #d4a017;
-      flex-shrink: 0;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .export-group {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: .85rem;
-      color: #555;
-    }
-
-    .btn-export {
-      background: #555;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 16px;
-      cursor: pointer;
-      font-size: .83rem;
-      font-weight: 600;
-      transition: background .2s;
-    }
-    .btn-export:hover { background: #333; }
-
-    .btn-save {
-      background: #d4a017;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 9px 24px;
-      font-size: .92rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .2s;
-    }
-    .btn-save:hover { background: #f0b820; box-shadow: 0 0 14px rgba(212,160,23,.6); }
-
-    /* ============================================================
-       SCROLLBAR
-    ============================================================ */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--surface); }
-    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #666; }
+    /* scrollbar */
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:var(--surface);}
+    ::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
   </style>
 </head>
 <body>
 
-  <!-- ===== HEADER ===== -->
-  <header>
-    <h1>🕐 Hyun's Dashboard</h1>
-  </header>
+<header><h1>🕐 Hyun's Dashboard</h1></header>
 
-  <!-- ===== MAIN GRID ===== -->
-  <main class="dashboard">
+<main class="dashboard">
 
-    <!-- LEFT: Clock -->
+  <!-- ═══ COL 1 : Clock + Tools ═══ -->
+  <div class="col-left">
+
     <section class="card clock-card">
       <div class="card-title">한국 시간 (KST)</div>
-      <canvas id="clockCanvas" width="340" height="340"></canvas>
-      <div id="digitalTime" class="digital-time">00:00:00</div>
-      <div id="clockDate" class="clock-date"></div>
+      <div class="clock-inner">
+        <canvas id="clockCanvas" width="308" height="308"></canvas>
+        <div id="digitalTime" class="digital-time">00:00:00</div>
+        <div id="clockDate"   class="clock-date"></div>
+      </div>
     </section>
 
-    <!-- CENTER: Calendar -->
+    <section class="card tools-card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="timer">⏱ 타이머</button>
+        <button class="tab-btn"        data-tab="stopwatch">⏱ 스톱워치</button>
+        <button class="tab-btn"        data-tab="alarm">⏰ 알람</button>
+      </div>
+
+      <!-- TIMER -->
+      <div class="tab-content active" id="tab-timer">
+        <div id="timerDisplay" class="tool-display">00:00</div>
+        <div class="tool-input-row">
+          <input id="timerMin" type="number" class="tool-input" value="5" min="0" max="99"/>
+          <span class="lbl">분</span>
+          <input id="timerSec" type="number" class="tool-input" value="0"  min="0" max="59"/>
+          <span class="lbl">초</span>
+        </div>
+        <div class="tool-btn-row">
+          <button id="timerStartBtn" class="tool-btn tb-green" onclick="timerToggle()">▶ 시작</button>
+          <button                    class="tool-btn tb-gray"  onclick="timerReset()">↺ 리셋</button>
+        </div>
+      </div>
+
+      <!-- STOPWATCH -->
+      <div class="tab-content" id="tab-stopwatch">
+        <div id="swDisplay" class="tool-display">00:00.0</div>
+        <div class="tool-btn-row">
+          <button id="swStartBtn" class="tool-btn tb-green" onclick="swToggle()">▶ 시작</button>
+          <button                 class="tool-btn tb-gray"  onclick="swLap()">📌 랩</button>
+          <button                 class="tool-btn tb-red"   onclick="swReset()">↺ 리셋</button>
+        </div>
+        <div class="sw-laps" id="swLaps"></div>
+      </div>
+
+      <!-- ALARM -->
+      <div class="tab-content" id="tab-alarm">
+        <div id="alarmDisplay" class="tool-display" style="margin-bottom:8px">--:--</div>
+        <div style="text-align:center">
+          <input type="time" id="alarmTimeInput" class="alarm-time-input"/>
+        </div>
+        <div class="tool-btn-row">
+          <button class="tool-btn tb-green" onclick="setAlarm()">⏰ 알람 설정</button>
+          <button class="tool-btn tb-red"   onclick="cancelAlarm()">✕ 취소</button>
+        </div>
+        <div class="alarm-status" id="alarmStatus">알람이 설정되지 않았습니다.</div>
+      </div>
+    </section>
+
+  </div><!-- /col-left -->
+
+  <!-- ═══ COL 2 : 3 Months ═══ -->
+  <div class="col-center">
+    <!-- Month 0 (base, with nav) -->
     <section class="card calendar-card">
-      <div class="cal-header">
+      <div class="cal-header" style="border-radius:var(--radius) var(--radius) 0 0">
         <button id="prevMonth" class="cal-nav">&#9664;</button>
-        <div class="cal-header-center">
-          <span id="calMonthLabel" class="cal-month">JANUARY</span>
-          <span id="calYearLabel" class="cal-year">2026</span>
+        <div class="cal-hc">
+          <span class="cal-month" id="calM0"></span>
+          <span class="cal-year"  id="calY0"></span>
         </div>
         <button id="nextMonth" class="cal-nav">&#9654;</button>
       </div>
       <table class="cal-table">
-        <thead>
-          <tr id="calDaysHead"></tr>
-        </thead>
-        <tbody id="calBody"></tbody>
+        <thead><tr id="calH0"></tr></thead>
+        <tbody id="calB0"></tbody>
       </table>
     </section>
 
-    <!-- RIGHT: Post-it -->
-    <section class="card note-card">
-      <div class="note-header">
-        <div class="card-title" style="margin-bottom:0;">📝 포스트잇 메모</div>
-        <button id="addNoteBtn" class="btn-add">+ 새 메모</button>
+    <!-- Month +1 -->
+    <section class="card calendar-card">
+      <div class="cal-header" style="border-radius:var(--radius) var(--radius) 0 0">
+        <div style="width:30px"></div>
+        <div class="cal-hc">
+          <span class="cal-month" id="calM1"></span>
+          <span class="cal-year"  id="calY1"></span>
+        </div>
+        <div style="width:30px"></div>
       </div>
-      <div id="noteList" class="note-list"></div>
+      <table class="cal-table">
+        <thead><tr id="calH1"></tr></thead>
+        <tbody id="calB1"></tbody>
+      </table>
     </section>
 
-  </main>
-
-  <!-- ===== NOTE MODAL ===== -->
-  <div id="noteModal" class="modal modal-hidden">
-    <div class="modal-box">
-      <div class="modal-top">
-        <span class="modal-title">✏️ 메모 편집</span>
-        <button id="closeModal" class="btn-icon" title="닫기">✕</button>
-      </div>
-
-      <!-- Rich Text Toolbar -->
-      <div class="rte-toolbar">
-        <select id="fontSizeSelect" title="글자 크기">
-          <option value="1">작게</option>
-          <option value="3" selected>보통</option>
-          <option value="5">크게</option>
-          <option value="7">매우 크게</option>
-        </select>
-        <button id="cmd-bold"   title="굵게"><b>B</b></button>
-        <button id="cmd-italic" title="기울임"><i>I</i></button>
-        <button id="cmd-under"  title="밑줄"><u>U</u></button>
-        <button id="cmd-strike" title="취소선"><s>S</s></button>
-        <input  type="color" id="colorPicker" title="글자색" value="#111111" />
-        <button id="cmd-left"   title="왼쪽 정렬">⬅</button>
-        <button id="cmd-center" title="가운데 정렬">↔</button>
-        <button id="cmd-right"  title="오른쪽 정렬">➡</button>
-        <button id="cmd-ul"     title="글머리 기호">• 목록</button>
-        <button id="cmd-ol"     title="번호 목록">1. 목록</button>
-        <button id="cmd-clear"  title="서식 제거">✖ 서식</button>
-      </div>
-
-      <div id="rteEditor" class="rte-editor" contenteditable="true" spellcheck="false"></div>
-
-      <div class="modal-actions">
-        <div class="export-group">
-          <span>내보내기:</span>
-          <button id="exportHTML" class="btn-export">HTML</button>
-          <button id="exportTXT"  class="btn-export">TXT</button>
+    <!-- Month +2 -->
+    <section class="card calendar-card">
+      <div class="cal-header" style="border-radius:var(--radius) var(--radius) 0 0">
+        <div style="width:30px"></div>
+        <div class="cal-hc">
+          <span class="cal-month" id="calM2"></span>
+          <span class="cal-year"  id="calY2"></span>
         </div>
-        <button id="saveNote" class="btn-save">💾 저장</button>
+        <div style="width:30px"></div>
       </div>
+      <table class="cal-table">
+        <thead><tr id="calH2"></tr></thead>
+        <tbody id="calB2"></tbody>
+      </table>
+    </section>
+  </div><!-- /col-center -->
+
+  <!-- ═══ COL 3 : Post-it ═══ -->
+  <section class="card note-card">
+    <div class="note-header">
+      <div class="card-title" style="margin-bottom:0">📝 포스트잇 메모</div>
+      <button id="addNoteBtn" class="btn-add">+ 새 메모</button>
+    </div>
+    <div id="noteList" class="note-list"></div>
+  </section>
+
+</main>
+
+<!-- ═══ ALARM OVERLAY ═══ -->
+<div id="alarmOverlay" class="alarm-overlay hidden" onclick="dismissAlarm()">
+  <div class="alarm-icon-big">⚠️</div>
+  <div class="alarm-msg">⚠️ 알람! ⚠️</div>
+  <div class="alarm-icon-big">⚠️</div>
+  <div class="alarm-hint">클릭하여 알람 해제</div>
+</div>
+
+<!-- ═══ NOTE MODAL ═══ -->
+<div id="noteModal" class="modal modal-hidden">
+  <div class="modal-box">
+    <div class="modal-top">
+      <span class="modal-title">✏️ 메모 편집</span>
+      <button id="closeModal" class="btn-icon">✕</button>
+    </div>
+    <div class="rte-toolbar">
+      <select id="fontSizeSelect">
+        <option value="1">작게</option>
+        <option value="3" selected>보통</option>
+        <option value="5">크게</option>
+        <option value="7">매우 크게</option>
+      </select>
+      <button id="cmd-bold"><b>B</b></button>
+      <button id="cmd-italic"><i>I</i></button>
+      <button id="cmd-under"><u>U</u></button>
+      <button id="cmd-strike"><s>S</s></button>
+      <input  type="color" id="colorPicker" value="#111111"/>
+      <button id="cmd-left">⬅</button>
+      <button id="cmd-center">↔</button>
+      <button id="cmd-right">➡</button>
+      <button id="cmd-ul">• 목록</button>
+      <button id="cmd-ol">1. 목록</button>
+      <button id="cmd-clear">✖ 서식</button>
+    </div>
+    <div id="rteEditor" class="rte-editor" contenteditable="true" spellcheck="false"></div>
+    <div class="modal-actions">
+      <div class="export-group">
+        <span>내보내기:</span>
+        <button id="exportHTML" class="btn-export">HTML</button>
+        <button id="exportTXT"  class="btn-export">TXT</button>
+      </div>
+      <button id="saveNote" class="btn-save">💾 저장</button>
     </div>
   </div>
+</div>
 
-  <script>
-    /* ============================================================
-       UTILITIES
-    ============================================================ */
-    const pad = n => String(n).padStart(2, '0');
+<script>
+/* =====================================================
+   UTILITIES
+===================================================== */
+const pad  = n => String(n).padStart(2,'0');
+function koreanNow(){
+  return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
+}
 
-    function koreanNow() {
-      return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-    }
+/* =====================================================
+   1. ANALOG CLOCK
+===================================================== */
+const canvas = document.getElementById('clockCanvas');
+const ctx    = canvas.getContext('2d');
+const CX = canvas.width/2, CY = canvas.height/2, R = CX - 8;
+const GREEN = '#39ff14', GDIM = '#1a7a00';
 
-    /* ============================================================
-       1. ANALOG CLOCK
-    ============================================================ */
-    const canvas = document.getElementById('clockCanvas');
-    const ctx    = canvas.getContext('2d');
-    const CX     = canvas.width  / 2;
-    const CY     = canvas.height / 2;
-    const R      = CX - 8;
+function drawClock(){
+  const now = koreanNow();
+  const hrs=now.getHours(), min=now.getMinutes(),
+        sec=now.getSeconds(), ms=now.getMilliseconds();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const GREEN      = '#39ff14';
-    const GREEN_DIM  = '#1a7a00';
-    const GREEN_GLOW = '#39ff14';
+  /* face */
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2);
+  ctx.fillStyle='#000'; ctx.fill();
 
-    function drawClock() {
-      const now = koreanNow();
-      const hrs = now.getHours();
-      const min = now.getMinutes();
-      const sec = now.getSeconds();
-      const ms  = now.getMilliseconds();
+  /* glow ring */
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2);
+  ctx.strokeStyle=GREEN; ctx.lineWidth=3.5;
+  ctx.shadowColor=GREEN; ctx.shadowBlur=18; ctx.stroke(); ctx.shadowBlur=0;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      /* ── Black face ── */
-      ctx.save();
+  /* tick marks */
+  for(let i=0;i<60;i++){
+    const a=(i/60)*Math.PI*2-Math.PI/2;
+    if(i%5!==0){
       ctx.beginPath();
-      ctx.arc(CX, CY, R, 0, Math.PI * 2);
-      ctx.fillStyle = '#000';
-      ctx.fill();
-
-      /* Outer glow ring */
+      ctx.arc(CX+Math.cos(a)*(R-12),CY+Math.sin(a)*(R-12),2,0,Math.PI*2);
+      ctx.fillStyle=GREEN; ctx.shadowColor=GREEN; ctx.shadowBlur=4;
+      ctx.fill(); ctx.shadowBlur=0;
+    } else {
       ctx.beginPath();
-      ctx.arc(CX, CY, R, 0, Math.PI * 2);
-      ctx.strokeStyle = GREEN;
-      ctx.lineWidth   = 3.5;
-      ctx.shadowColor = GREEN_GLOW;
-      ctx.shadowBlur  = 18;
-      ctx.stroke();
-      ctx.restore();
+      ctx.moveTo(CX+Math.cos(a)*(R-6), CY+Math.sin(a)*(R-6));
+      ctx.lineTo(CX+Math.cos(a)*(R-22),CY+Math.sin(a)*(R-22));
+      ctx.strokeStyle=GREEN; ctx.lineWidth=2.8;
+      ctx.shadowColor=GREEN; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+    }
+  }
 
-      /* ── Tick marks ── */
-      for (let i = 0; i < 60; i++) {
-        const angle = (i / 60) * Math.PI * 2 - Math.PI / 2;
-        if (i % 5 !== 0) {
-          // minute dots
-          const dr = R - 12;
-          ctx.beginPath();
-          ctx.arc(CX + Math.cos(angle) * dr, CY + Math.sin(angle) * dr, 2, 0, Math.PI * 2);
-          ctx.fillStyle   = GREEN;
-          ctx.shadowColor = GREEN_GLOW;
-          ctx.shadowBlur  = 5;
-          ctx.fill();
-          ctx.shadowBlur  = 0;
-        } else {
-          // hour tick lines
-          const inner = R - 24;
-          const outer = R - 7;
-          ctx.beginPath();
-          ctx.moveTo(CX + Math.cos(angle) * outer, CY + Math.sin(angle) * outer);
-          ctx.lineTo(CX + Math.cos(angle) * inner, CY + Math.sin(angle) * inner);
-          ctx.strokeStyle = GREEN;
-          ctx.lineWidth   = 2.5;
-          ctx.shadowColor = GREEN_GLOW;
-          ctx.shadowBlur  = 8;
-          ctx.stroke();
-          ctx.shadowBlur  = 0;
-        }
+  /* 12h numerals – thick (strokeText + fillText) */
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor=GREEN; ctx.shadowBlur=10;
+  for(let h=1;h<=12;h++){
+    const a=(h/12)*Math.PI*2-Math.PI/2;
+    const nx=CX+Math.cos(a)*(R-40), ny=CY+Math.sin(a)*(R-40);
+    ctx.font='bold 27px Arial,sans-serif';
+    ctx.strokeStyle=GREEN; ctx.lineWidth=1.5; ctx.fillStyle=GREEN;
+    ctx.strokeText(String(h),nx,ny);
+    ctx.fillText(String(h),nx,ny);
+  }
+  ctx.shadowBlur=0;
+
+  /* 24h numerals */
+  ctx.font='10px Arial,sans-serif'; ctx.fillStyle=GDIM;
+  for(let h=1;h<=24;h++){
+    const a=(h/24)*Math.PI*2-Math.PI/2;
+    ctx.fillText(String(h),CX+Math.cos(a)*(R-67),CY+Math.sin(a)*(R-67));
+  }
+
+  /* hands */
+  const sf=sec+ms/1000, mf=min+sf/60, hf=(hrs%12)+mf/60;
+  function hand(frac,total,len,w,color,glow){
+    const a=(frac/total)*Math.PI*2-Math.PI/2;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(CX-Math.cos(a)*len*.18, CY-Math.sin(a)*len*.18);
+    ctx.lineTo(CX+Math.cos(a)*len,     CY+Math.sin(a)*len);
+    ctx.strokeStyle=color; ctx.lineWidth=w; ctx.lineCap='round';
+    if(glow){ctx.shadowColor=color; ctx.shadowBlur=16;}
+    ctx.stroke(); ctx.restore();
+  }
+  hand(hf,12,R*.52,8,  GREEN,   true);
+  hand(mf,60,R*.74,5,  GREEN,   true);
+  hand(sf,60,R*.86,1.8,'#ff3b30',false);
+
+  /* centre dot */
+  ctx.save();
+  ctx.beginPath(); ctx.arc(CX,CY,7,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.shadowColor='#fff'; ctx.shadowBlur=8; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,3.5,0,Math.PI*2);
+  ctx.fillStyle='#ff3b30'; ctx.fill();
+  ctx.restore();
+}
+
+function updateDigital(){
+  const n=koreanNow();
+  const days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  document.getElementById('digitalTime').textContent=
+    `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  document.getElementById('clockDate').textContent=
+    `${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 ${days[n.getDay()]}`;
+}
+
+function masterTick(){ drawClock(); updateDigital(); checkAlarm(); }
+masterTick();
+setInterval(masterTick, 50);
+
+/* =====================================================
+   2. CALENDAR – 3 months
+===================================================== */
+const DAYS=['일','월','화','수','목','금','토'];
+const MONS=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE',
+            'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+let calBaseYear, calBaseMonth;
+
+function initCalendar(){
+  const t=koreanNow(); calBaseYear=t.getFullYear(); calBaseMonth=t.getMonth();
+  renderAll3();
+}
+function renderAll3(){
+  for(let i=0;i<3;i++){
+    let m=calBaseMonth+i, y=calBaseYear;
+    while(m>11){m-=12;y++;}
+    renderMonth(y,m,i);
+  }
+}
+function renderMonth(year,month,idx){
+  const t=koreanNow(); const tY=t.getFullYear(),tM=t.getMonth(),tD=t.getDate();
+  document.getElementById('calM'+idx).textContent=MONS[month];
+  document.getElementById('calY'+idx).textContent=year;
+  const head=document.getElementById('calH'+idx);
+  head.innerHTML='';
+  DAYS.forEach(d=>{const th=document.createElement('th');th.textContent=d;head.appendChild(th);});
+  const first=new Date(year,month,1).getDay();
+  const dim=new Date(year,month+1,0).getDate();
+  const body=document.getElementById('calB'+idx); body.innerHTML='';
+  let d=1;
+  for(let row=0;row<6;row++){
+    if(d>dim)break;
+    const tr=document.createElement('tr');
+    for(let col=0;col<7;col++){
+      const td=document.createElement('td');
+      const ci=row*7+col;
+      if(ci<first||d>dim){td.classList.add('empty');}
+      else{
+        td.textContent=d;
+        if(col===0)td.classList.add('sunday');
+        if(col===6)td.classList.add('saturday');
+        if(d===tD&&month===tM&&year===tY)td.classList.add('today');
+        d++;
       }
+      tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+}
+document.getElementById('prevMonth').addEventListener('click',()=>{
+  if(--calBaseMonth<0){calBaseMonth=11;calBaseYear--;} renderAll3();});
+document.getElementById('nextMonth').addEventListener('click',()=>{
+  if(++calBaseMonth>11){calBaseMonth=0;calBaseYear++;} renderAll3();});
+initCalendar();
 
-      /* ── 12-hour numerals (outer, large, neon green) ── */
-      ctx.font         = 'bold 26px Arial, sans-serif';
-      ctx.fillStyle    = GREEN;
-      ctx.textAlign    = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor  = GREEN_GLOW;
-      ctx.shadowBlur   = 12;
-      for (let h = 1; h <= 12; h++) {
-        const angle = (h / 12) * Math.PI * 2 - Math.PI / 2;
-        const nx = CX + Math.cos(angle) * (R - 40);
-        const ny = CY + Math.sin(angle) * (R - 40);
-        ctx.fillText(String(h), nx, ny);
+/* =====================================================
+   3. TABS
+===================================================== */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const name=btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+  });
+});
+
+/* =====================================================
+   4. TIMER
+===================================================== */
+let timerLeft=0, timerRunning=false, timerIv=null;
+const timerDisp=document.getElementById('timerDisplay');
+const timerBtn =document.getElementById('timerStartBtn');
+
+function timerRender(){ const m=Math.floor(timerLeft/60),s=timerLeft%60; timerDisp.textContent=pad(m)+':'+pad(s); }
+function timerToggle(){
+  if(timerRunning){
+    clearInterval(timerIv); timerIv=null; timerRunning=false;
+    timerBtn.textContent='▶ 재개'; timerBtn.className='tool-btn tb-green';
+  } else {
+    if(timerLeft===0){
+      const m=parseInt(document.getElementById('timerMin').value)||0;
+      const s=parseInt(document.getElementById('timerSec').value)||0;
+      timerLeft=m*60+s; if(timerLeft===0)return;
+    }
+    timerRunning=true;
+    timerBtn.textContent='⏸ 일시정지'; timerBtn.className='tool-btn tb-red';
+    timerIv=setInterval(()=>{
+      timerLeft--; timerRender();
+      if(timerLeft<=0){
+        clearInterval(timerIv); timerIv=null; timerRunning=false;
+        timerBtn.textContent='▶ 시작'; timerBtn.className='tool-btn tb-green';
+        let cnt=0;
+        const fl=setInterval(()=>{
+          timerDisp.style.color=cnt%2===0?'#ff3b30':GREEN;
+          if(++cnt>12){clearInterval(fl);timerDisp.style.color='';}
+        },280);
       }
-      ctx.shadowBlur = 0;
+    },1000);
+  }
+}
+function timerReset(){
+  clearInterval(timerIv);timerIv=null;timerRunning=false;timerLeft=0;
+  timerBtn.textContent='▶ 시작';timerBtn.className='tool-btn tb-green';
+  timerDisp.style.color='';timerDisp.textContent='00:00';
+}
+timerRender();
 
-      /* ── 24-hour numerals (inner, small, dim green) ── */
-      ctx.font      = '11px Arial, sans-serif';
-      ctx.fillStyle = GREEN_DIM;
-      for (let h = 1; h <= 24; h++) {
-        const angle = (h / 24) * Math.PI * 2 - Math.PI / 2;
-        const nx = CX + Math.cos(angle) * (R - 72);
-        const ny = CY + Math.sin(angle) * (R - 72);
-        ctx.fillText(String(h), nx, ny);
-      }
+/* =====================================================
+   5. STOPWATCH
+===================================================== */
+let swRunning=false, swStart=0, swAccum=0, swIv=null, swLapN=0, swLapStart=0;
+const swDisp=document.getElementById('swDisplay');
+const swBtn =document.getElementById('swStartBtn');
+function swFmt(ms){
+  const t=Math.floor(ms/100); const d=t%10; const s=Math.floor(t/10)%60; const m=Math.floor(t/600);
+  return pad(m)+':'+pad(s)+'.'+d;
+}
+function swToggle(){
+  if(swRunning){
+    clearInterval(swIv);swAccum+=Date.now()-swStart;swRunning=false;
+    swBtn.textContent='▶ 재개';swBtn.className='tool-btn tb-green';
+  } else {
+    swStart=Date.now();swRunning=true;
+    swBtn.textContent='⏸ 일시정지';swBtn.className='tool-btn tb-red';
+    swIv=setInterval(()=>{swDisp.textContent=swFmt(swAccum+Date.now()-swStart);},100);
+  }
+}
+function swLap(){
+  if(!swRunning)return;
+  const el=swAccum+Date.now()-swStart;
+  const lp=swLapStart?el-swLapStart:el; swLapStart=el; swLapN++;
+  const d=document.createElement('div'); d.className='sw-lap-item';
+  d.textContent=`Lap ${swLapN}  ${swFmt(el)}  (+${swFmt(lp)})`;
+  document.getElementById('swLaps').prepend(d);
+}
+function swReset(){
+  clearInterval(swIv);swRunning=false;swAccum=0;swStart=0;swLapN=0;swLapStart=0;
+  swDisp.textContent='00:00.0';swBtn.textContent='▶ 시작';swBtn.className='tool-btn tb-green';
+  document.getElementById('swLaps').innerHTML='';
+}
 
-      /* ── Hands ── */
-      const secFrac = sec + ms / 1000;
-      const minFrac = min + secFrac / 60;
-      const hrsFrac = (hrs % 12) + minFrac / 60;
+/* =====================================================
+   6. ALARM
+===================================================== */
+let alarmTime=null, alarmFired=false;
+const alarmOverlay=document.getElementById('alarmOverlay');
+const alarmStatus =document.getElementById('alarmStatus');
+const alarmDisp   =document.getElementById('alarmDisplay');
 
-      function hand(frac, total, len, width, color, glow) {
-        const angle = (frac / total) * Math.PI * 2 - Math.PI / 2;
-        const tail  = len * 0.2;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(CX - Math.cos(angle) * tail, CY - Math.sin(angle) * tail);
-        ctx.lineTo(CX + Math.cos(angle) * len,  CY + Math.sin(angle) * len);
-        ctx.strokeStyle = color;
-        ctx.lineWidth   = width;
-        ctx.lineCap     = 'round';
-        if (glow) { ctx.shadowColor = color; ctx.shadowBlur = 16; }
-        ctx.stroke();
-        ctx.restore();
-      }
+function setAlarm(){
+  const v=document.getElementById('alarmTimeInput').value;
+  if(!v){alert('알람 시간을 선택해주세요.');return;}
+  alarmTime=v; alarmFired=false;
+  alarmDisp.textContent=v;
+  alarmStatus.textContent='⏰ 알람 설정됨: '+v; alarmStatus.className='alarm-status on';
+}
+function cancelAlarm(){
+  alarmTime=null; alarmFired=false;
+  alarmDisp.textContent='--:--';
+  alarmStatus.textContent='알람이 설정되지 않았습니다.'; alarmStatus.className='alarm-status';
+  alarmOverlay.classList.add('hidden');
+}
+function checkAlarm(){
+  if(!alarmTime||alarmFired)return;
+  const n=koreanNow();
+  if(pad(n.getHours())+':'+pad(n.getMinutes())===alarmTime&&n.getSeconds()<2){
+    alarmFired=true; alarmOverlay.classList.remove('hidden');
+  }
+}
+function dismissAlarm(){
+  alarmOverlay.classList.add('hidden');
+  alarmTime=null; alarmFired=false;
+  alarmDisp.textContent='--:--';
+  alarmStatus.textContent='알람이 해제되었습니다.'; alarmStatus.className='alarm-status off';
+}
 
-      hand(hrsFrac,  12, R * 0.52, 8,   GREEN,     true);
-      hand(minFrac,  60, R * 0.74, 5,   GREEN,     true);
-      hand(secFrac,  60, R * 0.86, 1.8, '#ff3b30', false);
+/* =====================================================
+   7. POST-IT NOTES
+===================================================== */
+const STORE='hyuns-notes-v2';
+let notes=[], editingId=null;
+const modal =document.getElementById('noteModal');
+const editor=document.getElementById('rteEditor');
 
-      /* ── Centre dot ── */
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(CX, CY, 7, 0, Math.PI * 2);
-      ctx.fillStyle   = '#fff';
-      ctx.shadowColor = '#fff';
-      ctx.shadowBlur  = 10;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(CX, CY, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff3b30';
-      ctx.fill();
-      ctx.restore();
-    }
+function loadNotes(){try{notes=JSON.parse(localStorage.getItem(STORE))||[];}catch{notes=[];}}
+function saveNotes(){localStorage.setItem(STORE,JSON.stringify(notes));}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function plainText(h){const d=document.createElement('div');d.innerHTML=h;return(d.textContent||d.innerText||'').trim();}
 
-    function updateDigital() {
-      const now = koreanNow();
-      const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-      document.getElementById('digitalTime').textContent =
-        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-      document.getElementById('clockDate').textContent =
-        `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}`;
-    }
+function renderNotes(){
+  const list=document.getElementById('noteList'); list.innerHTML='';
+  if(!notes.length){list.innerHTML='<div class="note-empty">메모가 없습니다.<br>+ 새 메모 버튼을 클릭하세요.</div>';return;}
+  [...notes].reverse().forEach(note=>{
+    const item=document.createElement('div'); item.className='note-item';
+    const prev=document.createElement('div'); prev.className='note-preview'; prev.innerHTML=note.html.slice(0,280);
+    const dt  =document.createElement('div'); dt.className='note-date'; dt.textContent='✏ '+note.updatedAt;
+    const acts=document.createElement('div'); acts.className='note-actions';
+    const eb=document.createElement('button'); eb.className='note-btn edit'; eb.textContent='✏ 편집';
+    eb.onclick=e=>{e.stopPropagation();openModal(note.id);};
+    const db=document.createElement('button'); db.className='note-btn del'; db.textContent='🗑 삭제';
+    db.onclick=e=>{e.stopPropagation();delNote(note.id);};
+    acts.append(eb,db); item.append(prev,dt,acts);
+    item.addEventListener('click',()=>openModal(note.id));
+    list.appendChild(item);
+  });
+}
+function delNote(id){if(!confirm('이 메모를 삭제할까요?'))return;notes=notes.filter(n=>n.id!==id);saveNotes();renderNotes();}
+function openModal(id){
+  editingId=id||null;
+  editor.innerHTML=id?(notes.find(n=>n.id===id)?.html||''):'';
+  modal.classList.remove('modal-hidden');
+  setTimeout(()=>editor.focus(),50);
+}
+function closeModal(){modal.classList.add('modal-hidden');editingId=null;}
 
-    function tick() { drawClock(); updateDigital(); }
-    tick();
-    setInterval(tick, 50);
+document.getElementById('addNoteBtn').addEventListener('click',()=>openModal(null));
+document.getElementById('closeModal').addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
 
-    /* ============================================================
-       2. CALENDAR
-    ============================================================ */
-    const DAYS_KO  = ['일','월','화','수','목','금','토'];
-    const MONTHS_EN = [
-      'JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE',
-      'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'
-    ];
+document.getElementById('saveNote').addEventListener('click',()=>{
+  const html=editor.innerHTML.trim();
+  if(!html||html==='<br>'){alert('내용을 입력해주세요.');return;}
+  const now=koreanNow().toLocaleString('ko-KR');
+  if(editingId){const i=notes.findIndex(n=>n.id===editingId);if(i!==-1){notes[i].html=html;notes[i].updatedAt=now;}}
+  else{notes.push({id:genId(),html,updatedAt:now});}
+  saveNotes();renderNotes();closeModal();
+});
 
-    let calYear, calMonth;
+/* RTE */
+const E=id=>document.getElementById(id);
+E('cmd-bold'  ).onclick=()=>{document.execCommand('bold');           editor.focus();};
+E('cmd-italic').onclick=()=>{document.execCommand('italic');         editor.focus();};
+E('cmd-under' ).onclick=()=>{document.execCommand('underline');      editor.focus();};
+E('cmd-strike').onclick=()=>{document.execCommand('strikeThrough');  editor.focus();};
+E('cmd-left'  ).onclick=()=>{document.execCommand('justifyLeft');    editor.focus();};
+E('cmd-center').onclick=()=>{document.execCommand('justifyCenter');  editor.focus();};
+E('cmd-right' ).onclick=()=>{document.execCommand('justifyRight');   editor.focus();};
+E('cmd-ul'    ).onclick=()=>{document.execCommand('insertUnorderedList');editor.focus();};
+E('cmd-ol'    ).onclick=()=>{document.execCommand('insertOrderedList');  editor.focus();};
+E('cmd-clear' ).onclick=()=>{document.execCommand('removeFormat');   editor.focus();};
+E('fontSizeSelect').addEventListener('change',function(){document.execCommand('fontSize',false,this.value);editor.focus();});
+E('colorPicker').addEventListener('input',function(){document.execCommand('foreColor',false,this.value);editor.focus();});
 
-    function initCalendar() {
-      const t = koreanNow();
-      calYear  = t.getFullYear();
-      calMonth = t.getMonth();
-      renderCalendar();
-    }
+/* Export */
+function download(name,content,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:type+';charset=utf-8'}));
+  a.download=name; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(a.href);
+}
+E('exportHTML').addEventListener('click',()=>{
+  const h=editingId?(notes.find(n=>n.id===editingId)?.html||editor.innerHTML):editor.innerHTML;
+  download('memo.html',`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>메모</title></head><body style="font-family:sans-serif;padding:24px;line-height:1.8">${h}</body></html>`,'text/html');
+});
+E('exportTXT').addEventListener('click',()=>{
+  const h=editingId?(notes.find(n=>n.id===editingId)?.html||editor.innerHTML):editor.innerHTML;
+  download('memo.txt',plainText(h),'text/plain');
+});
 
-    function renderCalendar() {
-      const today = koreanNow();
-      const tY = today.getFullYear(), tM = today.getMonth(), tD = today.getDate();
-
-      document.getElementById('calMonthLabel').textContent = MONTHS_EN[calMonth];
-      document.getElementById('calYearLabel').textContent  = calYear;
-
-      /* Head */
-      const head = document.getElementById('calDaysHead');
-      head.innerHTML = '';
-      DAYS_KO.forEach(d => {
-        const th = document.createElement('th');
-        th.textContent = d;
-        head.appendChild(th);
-      });
-
-      const firstDay    = new Date(calYear, calMonth, 1).getDay();
-      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-      const body        = document.getElementById('calBody');
-      body.innerHTML    = '';
-
-      let d = 1;
-      for (let row = 0; row < 6; row++) {
-        if (d > daysInMonth) break;
-        const tr = document.createElement('tr');
-        for (let col = 0; col < 7; col++) {
-          const td  = document.createElement('td');
-          const idx = row * 7 + col;
-          if (idx < firstDay || d > daysInMonth) {
-            td.classList.add('empty');
-          } else {
-            td.textContent = d;
-            if (col === 0) td.classList.add('sunday');
-            if (col === 6) td.classList.add('saturday');
-            if (d === tD && calMonth === tM && calYear === tY) td.classList.add('today');
-            d++;
-          }
-          tr.appendChild(td);
-        }
-        body.appendChild(tr);
-      }
-    }
-
-    document.getElementById('prevMonth').addEventListener('click', () => {
-      if (--calMonth < 0) { calMonth = 11; calYear--; }
-      renderCalendar();
-    });
-    document.getElementById('nextMonth').addEventListener('click', () => {
-      if (++calMonth > 11) { calMonth = 0; calYear++; }
-      renderCalendar();
-    });
-
-    initCalendar();
-
-    /* ============================================================
-       3. POST-IT NOTES
-    ============================================================ */
-    const STORAGE_KEY = 'hyuns-notes-v2';
-    let notes     = [];
-    let editingId = null;
-
-    const modal    = document.getElementById('noteModal');
-    const editor   = document.getElementById('rteEditor');
-
-    function loadNotes() {
-      try { notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-      catch { notes = []; }
-    }
-    function saveNotes() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-    }
-    function genId() {
-      return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    }
-
-    function plainText(html) {
-      const d = document.createElement('div');
-      d.innerHTML = html;
-      return (d.textContent || d.innerText || '').trim();
-    }
-
-    function renderNotes() {
-      const list = document.getElementById('noteList');
-      list.innerHTML = '';
-      if (!notes.length) {
-        list.innerHTML = '<div class="note-empty">메모가 없습니다.<br>+ 새 메모 버튼을 클릭하세요.</div>';
-        return;
-      }
-      [...notes].reverse().forEach(note => {
-        const item = document.createElement('div');
-        item.className = 'note-item';
-
-        const preview = document.createElement('div');
-        preview.className = 'note-preview';
-        preview.innerHTML = note.html.slice(0, 280);
-
-        const dateEl = document.createElement('div');
-        dateEl.className = 'note-date';
-        dateEl.textContent = '✏ ' + note.updatedAt;
-
-        const actions = document.createElement('div');
-        actions.className = 'note-actions';
-
-        const editBtn = document.createElement('button');
-        editBtn.className = 'note-btn edit';
-        editBtn.textContent = '✏ 편집';
-        editBtn.onclick = e => { e.stopPropagation(); openModal(note.id); };
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'note-btn del';
-        delBtn.textContent = '🗑 삭제';
-        delBtn.onclick = e => { e.stopPropagation(); deleteNote(note.id); };
-
-        actions.append(editBtn, delBtn);
-        item.append(preview, dateEl, actions);
-        item.addEventListener('click', () => openModal(note.id));
-        list.appendChild(item);
-      });
-    }
-
-    function deleteNote(id) {
-      if (!confirm('이 메모를 삭제할까요?')) return;
-      notes = notes.filter(n => n.id !== id);
-      saveNotes();
-      renderNotes();
-    }
-
-    /* Modal */
-    function openModal(id) {
-      editingId = id || null;
-      editor.innerHTML = id ? (notes.find(n => n.id === id)?.html || '') : '';
-      modal.classList.remove('modal-hidden');
-      setTimeout(() => editor.focus(), 50);
-    }
-
-    function closeModal() {
-      modal.classList.add('modal-hidden');
-      editingId = null;
-    }
-
-    document.getElementById('addNoteBtn').addEventListener('click', () => openModal(null));
-    document.getElementById('closeModal').addEventListener('click', closeModal);
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-
-    /* Save */
-    document.getElementById('saveNote').addEventListener('click', () => {
-      const html = editor.innerHTML.trim();
-      if (!html || html === '<br>') { alert('내용을 입력해주세요.'); return; }
-      const now = koreanNow().toLocaleString('ko-KR');
-      if (editingId) {
-        const idx = notes.findIndex(n => n.id === editingId);
-        if (idx !== -1) { notes[idx].html = html; notes[idx].updatedAt = now; }
-      } else {
-        notes.push({ id: genId(), html, updatedAt: now });
-      }
-      saveNotes();
-      renderNotes();
-      closeModal();
-    });
-
-    /* RTE toolbar wiring */
-    document.getElementById('cmd-bold').onclick   = () => { document.execCommand('bold');            editor.focus(); };
-    document.getElementById('cmd-italic').onclick  = () => { document.execCommand('italic');          editor.focus(); };
-    document.getElementById('cmd-under').onclick   = () => { document.execCommand('underline');       editor.focus(); };
-    document.getElementById('cmd-strike').onclick  = () => { document.execCommand('strikeThrough');   editor.focus(); };
-    document.getElementById('cmd-left').onclick    = () => { document.execCommand('justifyLeft');     editor.focus(); };
-    document.getElementById('cmd-center').onclick  = () => { document.execCommand('justifyCenter');   editor.focus(); };
-    document.getElementById('cmd-right').onclick   = () => { document.execCommand('justifyRight');    editor.focus(); };
-    document.getElementById('cmd-ul').onclick      = () => { document.execCommand('insertUnorderedList'); editor.focus(); };
-    document.getElementById('cmd-ol').onclick      = () => { document.execCommand('insertOrderedList');   editor.focus(); };
-    document.getElementById('cmd-clear').onclick   = () => { document.execCommand('removeFormat');   editor.focus(); };
-
-    document.getElementById('fontSizeSelect').addEventListener('change', function() {
-      document.execCommand('fontSize', false, this.value);
-      editor.focus();
-    });
-
-    document.getElementById('colorPicker').addEventListener('input', function() {
-      document.execCommand('foreColor', false, this.value);
-      editor.focus();
-    });
-
-    /* Export */
-    function download(name, content, type) {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([content], { type: type + ';charset=utf-8' }));
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-    }
-
-    document.getElementById('exportHTML').addEventListener('click', () => {
-      const html = editingId
-        ? notes.find(n => n.id === editingId)?.html || editor.innerHTML
-        : editor.innerHTML;
-      download('memo.html',
-        `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>메모</title></head><body style="font-family:sans-serif;padding:24px;line-height:1.7">${html}</body></html>`,
-        'text/html');
-    });
-
-    document.getElementById('exportTXT').addEventListener('click', () => {
-      const html = editingId
-        ? notes.find(n => n.id === editingId)?.html || editor.innerHTML
-        : editor.innerHTML;
-      download('memo.txt', plainText(html), 'text/plain');
-    });
-
-    /* Init */
-    loadNotes();
-    renderNotes();
-  </script>
+loadNotes(); renderNotes();
+</script>
 </body>
 </html>
