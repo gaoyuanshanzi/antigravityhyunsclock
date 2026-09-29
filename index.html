@@ -252,8 +252,11 @@
       <!-- ALARM -->
       <div class="tab-pane" id="tab-alarm">
         <div id="alarmDisplay" class="tool-display">--:--</div>
-        <div class="tool-row">
-          <input type="time" id="alarmTimeInput" class="alarm-time-input"/>
+        <div class="tool-row" style="justify-content:center;gap:4px;align-items:center;">
+          <input type="number" id="alarmHour"   class="tool-input" min="0" max="23" value="8"  style="width:60px;font-size:1.1rem;text-align:center;"/>
+          <span style="color:var(--green);font-size:1.5rem;font-weight:900;line-height:1;padding:0 2px">:</span>
+          <input type="number" id="alarmMinute" class="tool-input" min="0" max="59" value="0"  style="width:60px;font-size:1.1rem;text-align:center;"/>
+          <span class="lbl" style="margin-left:4px">시 : 분</span>
         </div>
         <div class="tool-row">
           <button id="alarmSetBtn"    class="tbtn tg">⏰ 알람 설정</button>
@@ -657,11 +660,15 @@ function swReset() {
    ALARM
 ===================================================================== */
 function setAlarm() {
-  const v = $('alarmTimeInput').value;
-  if (!v) { alert('알람 시간을 선택해주세요.'); return; }
-  alarmTime = v; alarmFired = false;
-  alarmDisp.textContent = v;
-  alarmStatus.textContent = '⏰ 알람 설정됨: ' + v;
+  const h = parseInt($('alarmHour').value);
+  const m = parseInt($('alarmMinute').value);
+  if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+    alert('올바른 시간을 입력해주세요. (시: 0~23, 분: 0~59)'); return;
+  }
+  alarmTime = pad(h) + ':' + pad(m);
+  alarmFired = false;
+  alarmDisp.textContent = pad(h) + ':' + pad(m);
+  alarmStatus.textContent = '⏰ 알람 설정됨: ' + pad(h) + ':' + pad(m);
   alarmStatus.className = 'alarm-status on';
 }
 
