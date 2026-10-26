@@ -101,6 +101,21 @@ function drawClock() {
   }
   ctx.shadowBlur = 0;
 
+  /* ── Day-of-week kanji below "12" ── */
+  const KANJI_DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+  const todayKanji = KANJI_DAYS[now.getDay()];
+  const angle12    = (12 / 12) * Math.PI * 2 - Math.PI / 2; // -π/2 (top)
+  const k12x = CX + Math.cos(angle12) * numR12;
+  const k12y = CY + Math.sin(angle12) * numR12 + 22;        // 22px below "12"
+  ctx.font         = 'bold 16px sans-serif';
+  ctx.fillStyle    = '#ff4444';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor  = '#ff4444';
+  ctx.shadowBlur   = 8;
+  ctx.fillText(todayKanji, k12x, k12y);
+  ctx.shadowBlur   = 0;
+
   /* ── 24-hour numerals (inner ring, small) ── */
   ctx.font      = '11px sans-serif';
   ctx.fillStyle = GREEN_DIM;
